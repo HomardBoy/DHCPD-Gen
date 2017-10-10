@@ -3,7 +3,7 @@
 #Déclaration des fonctions :
 TestIP1()
 {
-    #Isole octets de l'IP
+    #Isole les 4 octets de l'IP
     subnet2=$1
     oc1=${subnet2%%.*}
     subnet2=${subnet2#*.*}
@@ -13,7 +13,7 @@ TestIP1()
     subnet2=${subnet2#*.*}
     oc4=${subnet2%%.*}
 
-    #Isole octets du masque
+    #Isole les 4 octets du masque
     masque2=$2
     m1=${masque2%%.*}
     masque2=${masque2#*.*}
@@ -23,7 +23,7 @@ TestIP1()
     masque2=${masque2#*.*}
     m4=${masque2%%.*}
 
-    #Récupère les 4 octets de l'ip entrée
+    #Récupère les 4 octets de l'ip entrée par l'utilisateur
     debut2=$3
     deb1=${debut2%%.*}
     debut2=${debut2#*.*}
@@ -33,7 +33,7 @@ TestIP1()
     debut2=${debut2#*.*}
     deb4=${debut2%%.*}
 
-    #Test d'IP cohérentes (Pas de d'adresse de début = adresse réseau)
+    #Test d'IP cohérentes (Pas de d'adresse de début entrée = adresse réseau)
         if [ "$3" = "$subnet" ]
             then
                     echo $red " "
@@ -43,7 +43,7 @@ TestIP1()
                     exit 1
         fi
 
-        #Tests d'IP cohérentes (Octets pas plus grads que 255)
+        #Tests d'IP cohérentes (pas d'octets plus grads que 255)
                 if [ "$deb1" -ge "$max" ]
                 then
                     echo $red " "
@@ -80,7 +80,7 @@ TestIP1()
                     fi
                 fi
 
-#Test d'IP cohérentes n°3 (Respect du masque)
+#Test d'IP cohérentes n°3 (Respect du masque à 8bits prêts)
                 if [ $m1 = 255 ]
                 then
                     #Masque /8
@@ -124,29 +124,34 @@ TestIP1()
 #Sauvegarde aucien fichier de configuration
 cp /etc/dhcp/dhcpd.conf /etc/dhcpd.conf.bak
 
+#Déclaration des couleurs
 okegreen='\033[92m'
 RESET="\033[00m"
 red='\e[1;31m'
 
+#Clear le terminal
 clear
 max="255"
 
+#interroge l'utilisateur à propos du fichier de configuration
 echo $okegreen " "
 echo "Chemin relatif jusqu'au fichier de configuration à interpréter :"
 echo $RESET " "
 read nom
 
+#interroge l'utilisateur à propos de l'adresse IP du DNS
 echo $okegreen " "
 echo "Merci d'indiquer l'adresse du serveur DNS :"
 echo $RESET " "
 read DNSadd
 
+#interroge l'utilisateur à propos du nom de domaine
 echo $okegreen " "
 echo "Merci d'indiquer le nom de domaine :"
 echo $RESET " "
 read DomaineName
 
-#Configuration initial du fichier de conf
+#Configuration initial du fichier de conf.
 touch dhcpdbis.conf
 echo "option domain-name\"$DomaineName\""";" >> dhcpdbis.conf
 echo "option domain-name servers" $DNSadd";">> dhcpdbis.conf
@@ -156,13 +161,13 @@ if [ -f $nom ]
 then
 #Le fichier existe
 
-    #Nombre de lignes
+    #Copte nombre de lignes
     nbligne=$(wc -l $nom)
     echo $nbligne > temp.txt
     num=$(sed 's/test//' temp.txt)
     rm temp.txt
 
-    #Nombre d'adresses à traiter
+    #Détermine le nombre d'adresses à traiter
     nbaddress=$(($num/3))
     echo "DEBUG : NUMBER OF ADDRESS : " $nbaddress
     nbaddress2=$(($nbaddress - 1))
@@ -171,55 +176,57 @@ then
         for k in `seq 0 $nbaddress2`;
         do
 
-            #Isole l'adresse réseau
+            #Isole l'adresse réseau de chaque plages d'adresses
             positionaddress=$((($k*3)+1))
             positionmasque=$(($positionaddress+1))
             positionbroadcast=$(($positionaddress+2))
 
             #Récupère l'adresse réseau + le masque du ségment concerné et l'ajoute au fichier de configuration
-            #Récupère adresse réseau
+            #Récupère l'adresse réseau
             subnet2=$(head -n $positionaddress $nom | tail -n 1)
             echo $subnet2 > temp.txt
             subnet=$(sed 's/sr://' temp.txt)
-            #Récupère masque
+            #Récupère le masque
             masque2=$(head -n $positionmasque $nom | tail -n 1)
             rm temp.txt
             echo $masque2 > temp.txt
             masque=$(sed 's/masque://' temp.txt)
-            #Ajout de l'adresse et du masque au fichier de conf
+            #Ajout de l'adresse et du masque au fichier de configuration
             echo "" >> dhcpdbis.conf
             echo "subnet" $subnet "netmask" $masque "{" >> dhcpdbis.conf
             rm temp.txt
 
-            #Range début
+            #Interroge l'utilisateur sur le début de la plage d'adresse
             echo $okegreen " "
             echo "Merci d'indiquer l'adresse de début de l'étendue" $subnet ":"
             echo $RESET " "
             read debut
 
-            #Appel fonction de tests pour l'adresse de début
+            #Appel fonction de tests pour vérifier que l'adresse de début entrée est valide + cohérente avec le masque
             TestIP1 $subnet $masque $debut
 
-            #Range fin
+            #Interroge l'utilisateur sur la fin de la plage d'adresse
             echo $okegreen " "
             echo "Merci d'indiquer l'adresse de fin de l'étendue" $subnet ":"
             echo $RESET " "
             read fin
+            
+            #Ajoute le début et fin de la plage au fichier de configuration (+les infos DNS facultatives)
             echo "range" $debut $fin ";" >> dhcpdbis.conf
             echo "option domain-name-servers" $DNSadd";" >> dhcpdbis.conf
             echo "option domain-name\"$DomaineName\""";" >> dhcpdbis.conf
 
-            #Appel fonction de tests pour l'adresse de début
+            #Appel fonction de tests pour vérifier que l'adresse de fin entrée est valide + cohérente avec le masque
             TestIP1 $subnet $masque $fin
 
-            #Gateway
+            #Interroge l'utilisateur sur l'adresse de passerelle.
             echo $okegreen " "
             echo "Merci d'indiquer l'adresse de passerelle pour le réseau " $subnet ":"
             echo $RESET " "
             read gateway
             echo "option routers" $gateway ";" >> dhcpdbis.conf
 
-            #Appel fonction de tests pour l'adresse de passerelle
+            #Appel fonction de tests pour vérifier que l'adresse de passerelle entrée est valide + cohérente avec le masque
             TestIP1 $subnet $masque $gateway
 
             #Broadcast
@@ -248,10 +255,16 @@ then
 
         #Remplacement du fichier de configuration
         cp dhcpdbis.conf /etc/dhcp/dhcpd.conf
+        
+        #Redémarrage du service (rechargement du fichier)
+        service isc-dhcp-server restart
 
 else 
 #Le fichier n'existe pas
+    echo $red " "
     echo "Ouuups ..."
     echo "Le fichier à interpréter ne semble pas exister !"
     echo "Vérifiez l'emplacement et l'orthographe ..."
 fi
+
+
