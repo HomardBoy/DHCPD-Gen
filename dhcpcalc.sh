@@ -153,8 +153,8 @@ read DomaineName
 
 #Configuration initial du fichier de conf.
 touch dhcpdbis.conf
-echo "option domain-name\"$DomaineName\""";" >> dhcpdbis.conf
-echo "option domain-name servers" $DNSadd";">> dhcpdbis.conf
+echo 'option domain-name '\"$DomaineName\"';' >> dhcpdbis.conf
+echo "option domain-name-servers" $DNSadd";">> dhcpdbis.conf
 echo "authoritative;" >> dhcpdbis.conf
 
 if [ -f $nom ]
@@ -212,9 +212,9 @@ then
             read fin
             
             #Ajoute le début et fin de la plage au fichier de configuration (+les infos DNS facultatives)
-            echo "range" $debut $fin ";" >> dhcpdbis.conf
+            echo "range" $debut $fin";" >> dhcpdbis.conf
             echo "option domain-name-servers" $DNSadd";" >> dhcpdbis.conf
-            echo "option domain-name\"$DomaineName\""";" >> dhcpdbis.conf
+            echo 'option domain-name '\"$DomaineName\"';' >> dhcpdbis.conf
 
             #Appel fonction de tests pour vérifier que l'adresse de fin entrée est valide + cohérente avec le masque
             TestIP1 $subnet $masque $fin
@@ -224,7 +224,7 @@ then
             echo "Merci d'indiquer l'adresse de passerelle pour le réseau " $subnet ":"
             echo $RESET " "
             read gateway
-            echo "option routers" $gateway ";" >> dhcpdbis.conf
+            echo "option routers" $gateway";" >> dhcpdbis.conf
 
             #Appel fonction de tests pour vérifier que l'adresse de passerelle entrée est valide + cohérente avec le masque
             TestIP1 $subnet $masque $gateway
@@ -259,6 +259,8 @@ then
         #Redémarrage du service (rechargement du fichier)
         service isc-dhcp-server restart
 
+	#Suppression du ficheir temporaire
+	rm dhcpdbis.conf
 else 
 #Le fichier n'existe pas
     echo $red " "
