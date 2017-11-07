@@ -5,10 +5,9 @@ DHCPD Configurator est un script bash capable de génerer ou d'incrémenter un f
 
 ### Usage:
 Le script prend en paramètre un fichier correspondant aux spécificités d'adresses à ajouter au service DHCP, sous la forme suivante : 
-
-       addr:X.X.X.X
-       masque:X.X.X.X
-       diff:X.X.X.X
+       sr:XXX.XXX.XXX.XXX
+       masque:XXX.XXX.XXX.XXX
+       diff:XXX.XXX.XXX.XXX
       
 Si un grand nombre d'adresses sont à traiter, il est recommandé de séparer le fichier d'adresses à traiter en plsuieurs parties, de façon à éviter une mauvaise configuration réseau.
 
@@ -21,6 +20,6 @@ Le script effectue une sauvegarde daté de l'ancien fichier dhcpd.conf à chaque
 Les sauvegardes précédentes ne sont jamais écrasés. Celles-ci sont placés sous "/etc/dhcp"
 
 ### Bugs:
-Pour l'instant, le script ne fonctionne que lorsque le fichier d'adresses passé en paramètre a un nom ne dépassant pas 4 caractères. Ceci est dû à un décallage entrainé par la manipulations des chaines de caractères, empêchant le script de fonctionner.
+Pour l'instant, le script ne fonctionne que lorsque le fichier d'adresses passé en paramètre a un nom ne dépassant pas 4 caractères. Ceci est dû à un décallage entrainé par la manipulations des chaines de caractères, empêchant le script de fonctionner. Il est préférable de réutiliser et d'éditer le fichier d'adresses "test" fournis avec le script. 
 
 
